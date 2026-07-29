@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#0c2a58" />
     <title>Marseille 2026 · Comptes & notes</title>
-    <link rel="stylesheet" href="styles.css?v=2" />
+    <link rel="stylesheet" href="styles.css?v=3" />
   </head>
   <body>
     <header class="top">
@@ -89,6 +89,7 @@
               <div><span>PART MOYENNE</span><b id="share-total">0 €</b></div>
             </div>
             <ul class="expense-list" id="expense-list"></ul>
+            <div class="person-detail hidden" id="expense-detail"></div>
           </article>
           <article class="card tool full">
             <h3>Bilan individuel</h3>
@@ -109,7 +110,7 @@
             </p>
             <div class="settlements" id="settlements"></div>
           </article>
-          <article class="card tool">
+          <article class="card tool full">
             <h3>Historique</h3>
             <p>
               Ajouts, corrections, suppressions et remboursements cochés restent
@@ -122,17 +123,6 @@
               synchronisation partagée sécurisée.
             </p>
           </article>
-          <article class="card note-card full">
-            <h3>Notes du groupe</h3>
-            <p>
-              Listes rapides, infos logement, idées et rappels. Enregistré sur
-              cet appareil.
-            </p>
-            <textarea
-              id="group-notes"
-              placeholder="Ex. Arthur prend les glaçons…"
-            ></textarea>
-          </article>
         </div>
       </section>
     </main>
@@ -140,6 +130,6 @@
       <span>Marseille 2026 · Comptes du groupe</span
       ><a href="index.html">← Retour au programme</a>
     </footer>
-  <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
   </body>
 </html>

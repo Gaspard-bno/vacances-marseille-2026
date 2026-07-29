@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#0c2a58" />
     <title>Marseille 2026 · Budget</title>
-    <link rel="stylesheet" href="styles.css?v=2" />
+    <link rel="stylesheet" href="styles.css?v=3" />
   </head>
   <body>
     <header class="top">
@@ -62,6 +62,25 @@
           </aside>
         </div>
       </section>
+      <section class="section" id="perso">
+        <div class="section-head">
+          <h2>Calculer mon budget personnel</h2>
+          <p>Modifie uniquement les postes qui te concernent : ton total est calculé immédiatement, avec ta marge imprévus.</p>
+        </div>
+        <div class="budget-layout">
+          <form class="card personal-budget" id="personal-budget-form">
+            <div id="personal-budget-rows"></div>
+            <label class="margin-field">Marge imprévus <input id="personal-margin" type="number" min="0" max="50" value="10" /> %</label>
+          </form>
+          <aside class="card budget-side">
+            <span class="label">MON BUDGET</span>
+            <div class="big" id="personal-total">0 €</div>
+            <b>avec ta marge personnelle</b>
+            <p>Ce calcul est privé : il ne modifie ni le budget du groupe, ni les comptes communs.</p>
+            <button class="secondary" type="button" id="personal-reset">Revenir au scénario réaliste</button>
+          </aside>
+        </div>
+      </section>
       <section class="section">
         <div class="section-head">
           <h2>Options non incluses</h2>
@@ -105,6 +124,6 @@
       <span>Les dépenses réelles vont dans le carnet.</span
       ><a href="comptes.html">Ouvrir les comptes →</a>
     </footer>
-  <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
   </body>
 </html>
