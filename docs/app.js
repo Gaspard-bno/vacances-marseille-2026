@@ -73,12 +73,15 @@ function renderBudget(key = "realiste") {
 document
   .querySelectorAll("[data-budget]")
   .forEach((b) => b.addEventListener("click", () => {
+    const personalPanel = document.getElementById("perso");
+    const groupPanel = document.getElementById("group-budget-panel");
     if (b.dataset.budget === "perso") {
-      document.getElementById("perso")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      document.getElementById("personal-name")?.focus({ preventScroll: true });
+      personalPanel?.classList.remove("hidden"); groupPanel?.classList.add("hidden");
+      document.getElementById("personal-name")?.focus();
       document.querySelectorAll("[data-budget]").forEach((button) => button.classList.toggle("active", button === b));
       return;
     }
+    personalPanel?.classList.add("hidden"); groupPanel?.classList.remove("hidden");
     renderBudget(b.dataset.budget);
   }));
 renderBudget();
@@ -200,7 +203,7 @@ const legacy = {
   notes: localStorage.getItem("marseille26-notes-v1") || "",
 };
 let expenses = legacy.expenses.map((item) => ({ ...item, participants: item.participants || names }));
-let history = legacy.history, repayments = legacy.repayments, notes = legacy.notes, decisions = [];
+let history = legacy.history, repayments = legacy.repayments, notes = legacy.notes, decisions = [], activities = [], plans = [];
 let stateVersion = 1, editing = null, remoteLoaded = false, isSaving = false, realtimeClient = null, accessPromptResolve = null;
 function hasLegacyData() { return expenses.length || repayments.length || history.length || notes.trim(); }
 function normaliseState(state = {}) {
@@ -210,9 +213,11 @@ function normaliseState(state = {}) {
     history: Array.isArray(state.history) ? state.history : [],
     notes: typeof state.notes === "string" ? state.notes : Array.isArray(state.notes) ? state.notes.map((note) => note.text || note).join("\n") : "",
     decisions: Array.isArray(state.decisions) ? state.decisions : [],
+    activities: Array.isArray(state.activities) ? state.activities : [],
+    plans: Array.isArray(state.plans) ? state.plans : [],
   };
 }
-function currentState() { return { expenses, repayments, history, notes, decisions }; }
+function currentState() { return { expenses, repayments, history, notes, decisions, activities, plans }; }
 function setSyncStatus(message, tone = "live") {
   document.querySelectorAll("#sync-status").forEach((node) => {
     node.classList.toggle("is-live", tone === "live");
@@ -266,9 +271,9 @@ async function loadSharedState({ quiet = false } = {}) {
       renderAccounts();
       return;
     }
-    ({ expenses, repayments, history, notes, decisions } = next);
+    ({ expenses, repayments, history, notes, decisions, activities, plans } = next);
     renderAccounts();
-    renderNotes(); renderDecisions();
+    renderNotes(); renderDecisions(); renderEntryStates();
     if (!quiet) setSyncStatus("Lecture partagée à jour · code requis pour modifier", "live");
   } catch (error) {
     setSyncStatus(error.message || "Connexion indisponible", "error");
@@ -287,10 +292,10 @@ async function saveSharedState(actor, eventType) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || result.hint || "La modification n’a pas été enregistrée.");
     const row = Array.isArray(result) ? result[0] : result;
-    ({ expenses, repayments, history, notes, decisions } = normaliseState(row.state));
+    ({ expenses, repayments, history, notes, decisions, activities, plans } = normaliseState(row.state));
     stateVersion = Number(row.version) || stateVersion + 1;
     localStorage.setItem(MIGRATION_KEY, "1");
-    renderAccounts(); renderNotes(); renderDecisions();
+    renderAccounts(); renderNotes(); renderDecisions(); renderEntryStates();
     setSyncStatus("Enregistré pour tout le groupe", "live");
     return true;
   } catch (error) {
@@ -306,8 +311,8 @@ function startRealtime() {
   realtimeClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   realtimeClient.channel("marseille-2026-live").on("postgres_changes", { event: "UPDATE", schema: "public", table: "trip_state", filter: `id=eq.${TRIP_ID}` }, (payload) => {
     if (isSaving || Number(payload.new.version) <= stateVersion) return;
-    ({ expenses, repayments, history, notes, decisions } = normaliseState(payload.new.state));
-    stateVersion = Number(payload.new.version); renderAccounts(); renderNotes(); renderDecisions();
+    ({ expenses, repayments, history, notes, decisions, activities, plans } = normaliseState(payload.new.state));
+    stateVersion = Number(payload.new.version); renderAccounts(); renderNotes(); renderDecisions(); renderEntryStates();
     setSyncStatus("Mise à jour reçue du groupe", "live");
   }).subscribe();
 }
@@ -369,7 +374,7 @@ function renderAccounts() {
   $("expense-list").innerHTML = expenses.length ? expenses.map((expense) => { const resolved = isExpenseResolved(expense); return `<li class="${resolved ? "resolved" : ""}"><span><b>${esc(expense.label)}</b><small>${esc(expense.category)} · payé par ${expense.payer} · ${expense.participants.length} personne(s) · ${expense.at || ""}</small></span><span><b>${resolved ? "✓ réglée" : euro(expense.amount)}</b><button class="text-action" onclick="showExpense('${expense.id}')">détail</button><button class="text-action" onclick="editExpense('${expense.id}')">modifier</button><button class="text-action delete" onclick="deleteExpense('${expense.id}')">supprimer</button></span></li>`; }).join("") : "<li>Aucune dépense saisie.</li>";
   $("balance-list").innerHTML = names.map((name) => { const balanceForName = balance[name]; const status = personStatus(name, balanceForName); const className = balanceForName > 0.005 ? "positive" : balanceForName < -0.005 ? "negative" : ""; return `<button class="person status-${status.tone}" onclick="showPerson('${name}')"><b>${name}</b><small>avancé ${euro(paid[name])} · part ${euro(owed[name])}</small><small class="${className}">${balanceForName > 0.005 ? "doit recevoir " : balanceForName < -0.005 ? "doit rembourser " : "à l’équilibre "}${euro(Math.abs(balanceForName))} · ${status.label}</small></button>`; }).join("");
   $("settlements").innerHTML = (moves.length ? moves.map((move) => `<div class="settlement ${move.a > 100 ? "urgent" : move.a > 50 ? "warning" : ""}"><span><b>${move.from}</b> rembourse <b>${move.to}</b> · ${euro(move.a)}${move.a > 100 ? " · priorité" : move.a > 50 ? " · important" : ""}</span><button onclick="markRepayment('${move.from}','${move.to}',${move.a})">✓ fait</button></div>`).join("") : '<div class="settlement done">Tout le monde est à l’équilibre.</div>') + (repayments.length ? `<hr><small>Déjà cochés</small>${repayments.map((payment) => `<div class="settlement done"><span><b>${payment.from}</b> → <b>${payment.to}</b> · ${euro(payment.amount)}</span><button onclick="undoRepayment('${payment.id}')">annuler</button></div>`).join("")}` : "");
-  $("history").innerHTML = history.length ? history.map((entry) => `<li><span><b>${esc(entry.action)}</b> · ${esc(entry.text)}<small>${entry.at}</small></span>${entry.snapshot ? `<button class="text-action" onclick="restoreExpense('${entry.id}')">restaurer</button>` : ""}</li>`).join("") : "<li>Aucun historique pour le moment.</li>";
+  $("history").innerHTML = history.length ? history.map((entry) => `<li><button class="history-entry" type="button" onclick="showHistoryEntry('${entry.id}')"><b>${esc(entry.action)}</b> · ${esc(entry.text)}<small>${entry.at}</small></button>${entry.snapshot ? `<button class="text-action" onclick="restoreExpense('${entry.id}')" aria-label="Restaurer la dépense">↶</button>` : ""}</li>`).join("") : "<li>Aucun historique pour le moment.</li>";
 }
 function renderNotes() { if ($("group-notes") && document.activeElement !== $("group-notes")) $("group-notes").value = notes; }
 async function saveGroupNotes() { if (!(await ensureEditAccess())) return; notes = $("group-notes").value.trim(); await saveSharedState("Groupe", "Mise à jour des notes"); }
@@ -386,6 +391,65 @@ function renderDecisions() {
   });
 }
 function closeDecisionModal() { $("decision-modal-root")?.remove(); }
+function entryById(kind, id) {
+  const entries = kind === "activity" ? activities : plans;
+  const defaultStatus = kind === "activity" ? "à confirmer" : "prévu";
+  return entries.find((entry) => entry.id === id) || { id, status: defaultStatus, note: "", participants: names, updatedAt: "", updatedBy: "" };
+}
+function closeEntryModal() { $("entry-modal-root")?.remove(); }
+function renderEntryStates() {
+  document.querySelectorAll("[data-activity]").forEach((card) => {
+    const entry = entryById("activity", card.dataset.activity);
+    card.querySelector(".entry-state")?.remove();
+    const badge = document.createElement("span"); badge.className = "decision-state entry-state"; badge.textContent = entry.status;
+    card.querySelector("summary")?.append(badge);
+  });
+}
+function openEntryModal(kind, id, card) {
+  const entry = entryById(kind, id);
+  const title = card.querySelector(kind === "activity" ? "summary b" : "summary strong")?.textContent || "Détail";
+  const subtitle = card.querySelector(kind === "activity" ? "summary small" : "summary small")?.textContent || "";
+  const source = kind === "activity" ? card.querySelector(":scope > div") : card.querySelector(":scope > .detail");
+  closeEntryModal();
+  const root = document.createElement("div"); root.id = "entry-modal-root"; root.className = "decision-modal-backdrop";
+  const statusOptions = kind === "activity" ? ["à confirmer", "réservé", "fait"] : ["prévu", "à confirmer", "fait"];
+  root.innerHTML = `<section class="decision-modal entry-modal" role="dialog" aria-modal="true" aria-labelledby="entry-modal-title"><div class="decision-modal-head"><div><h3 id="entry-modal-title">${esc(title)}</h3><p>${esc(subtitle)}</p></div><button class="modal-close" type="button" aria-label="Fermer">×</button></div><div class="entry-modal-copy">${source?.innerHTML || ""}</div><label>État<select id="entry-status">${statusOptions.map((status) => `<option value="${status}">${status}</option>`).join("")}</select></label><label>Participants concernés<div class="entry-checks">${names.map((name) => `<label><input type="checkbox" value="${name}" ${entry.participants?.includes(name) ? "checked" : ""}>${name}</label>`).join("")}</div></label><label>Ton prénom<select id="entry-author">${names.map((name) => `<option>${name}</option>`).join("")}</select></label><label>Note partagée<textarea id="entry-note" placeholder="Ex. créneau réservé, conducteur, matériel à prendre, plan B…"></textarea></label><p class="entry-meta" id="entry-meta">${entry.updatedAt ? `Dernière mise à jour : ${esc(entry.updatedAt)} · ${esc(entry.updatedBy || "groupe")}` : "Aucune note partagée pour le moment."}</p><div class="decision-modal-actions"><button class="primary" id="entry-save" type="button">Enregistrer</button><button class="secondary" id="entry-done" type="button">Marquer comme fait</button></div></section>`;
+  document.body.append(root); $("entry-status").value = entry.status; $("entry-note").value = entry.note || "";
+  const save = async (forceDone = false) => {
+    if (!(await ensureEditAccess())) return;
+    const participants = [...document.querySelectorAll("#entry-modal-root .entry-checks input:checked")].map((input) => input.value);
+    const next = { id, status: forceDone ? "fait" : $("entry-status").value, note: $("entry-note").value.trim(), participants, updatedBy: $("entry-author").value, updatedAt: new Date().toLocaleString("fr-FR") };
+    if (kind === "activity") activities = [...activities.filter((item) => item.id !== id), next]; else plans = [...plans.filter((item) => item.id !== id), next];
+    log(kind === "activity" ? "Activité mise à jour" : "Programme mis à jour", `${title} · ${next.status}`);
+    renderEntryStates();
+    if (await saveSharedState(next.updatedBy, kind === "activity" ? "Mise à jour d’une activité" : "Mise à jour du programme")) closeEntryModal();
+  };
+  root.addEventListener("click", (event) => { if (event.target === root || event.target.closest(".modal-close")) closeEntryModal(); });
+  $("entry-save").onclick = () => save(false); $("entry-done").onclick = () => save(true);
+}
+function programmeInit() {
+  document.querySelectorAll(".day[data-plan]").forEach((day) => {
+    const detail = day.querySelector(":scope > .detail"); if (!detail || detail.querySelector(".day-modal-button")) return;
+    const button = document.createElement("button"); button.type = "button"; button.className = "day-modal-button"; button.textContent = "Voir le détail complet";
+    button.addEventListener("click", () => openEntryModal("plan", day.dataset.plan, day)); detail.append(button);
+  });
+}
+function activityInit() {
+  document.querySelectorAll(".activity-card[data-activity]").forEach((card) => {
+    const summary = card.querySelector("summary"); if (!summary) return;
+    summary.addEventListener("click", (event) => { event.preventDefault(); openEntryModal("activity", card.dataset.activity, card); });
+  });
+  renderEntryStates();
+}
+function showHistoryEntry(id) {
+  const entry = history.find((item) => item.id === id); if (!entry) return;
+  closeEntryModal();
+  const root = document.createElement("div"); root.id = "entry-modal-root"; root.className = "decision-modal-backdrop";
+  const snapshot = entry.snapshot ? `<div class="entry-meta"><b>Dépense restaurable</b><br>${esc(entry.snapshot.label)} · ${euro(entry.snapshot.amount)} · payé par ${esc(entry.snapshot.payer)}</div>` : "";
+  root.innerHTML = `<section class="decision-modal" role="dialog" aria-modal="true" aria-labelledby="history-modal-title"><div class="decision-modal-head"><div><h3 id="history-modal-title">${esc(entry.action)}</h3><p>${esc(entry.at || "Historique du groupe")}</p></div><button class="modal-close" type="button" aria-label="Fermer">×</button></div><div class="entry-meta"><b>Détail</b><br>${esc(entry.text)}</div>${snapshot}${entry.snapshot ? `<div class="decision-modal-actions"><button class="primary" id="history-restore" type="button">↶ Restaurer cette dépense</button></div>` : ""}</section>`;
+  document.body.append(root); root.addEventListener("click", (event) => { if (event.target === root || event.target.closest(".modal-close")) closeEntryModal(); });
+  $("history-restore")?.addEventListener("click", async () => { await restoreExpense(id); closeEntryModal(); });
+}
 function openDecision(id, card) {
   const decision = decisionById(id); const title = card.querySelector("b")?.textContent || "Décision"; const description = card.querySelector("p")?.textContent || "";
   closeDecisionModal();
@@ -395,13 +459,13 @@ function openDecision(id, card) {
   const save = async (forceConfirmed = false) => {
     if (!(await ensureEditAccess())) return;
     const next = { id, status: forceConfirmed ? "confirmé" : $("decision-status").value, note: $("decision-note").value.trim(), updatedBy: $("decision-author").value, updatedAt: new Date().toLocaleString("fr-FR") };
-    decisions = [...decisions.filter((item) => item.id !== id), next]; renderDecisions();
+    decisions = [...decisions.filter((item) => item.id !== id), next]; log("Décision mise à jour", `${title} · ${next.status}`); renderDecisions();
     if (await saveSharedState(next.updatedBy, "Mise à jour d’une décision")) closeDecisionModal();
   };
   root.addEventListener("click", (event) => { if (event.target === root || event.target.closest(".modal-close")) closeDecisionModal(); });
   $("decision-save").onclick = () => save(false); $("decision-confirm").onclick = () => save(true);
 }
 function decisionInit() { document.querySelectorAll("[data-decision]").forEach((card) => { const open = () => openDecision(card.dataset.decision, card); card.addEventListener("click", open); card.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } }); }); renderDecisions(); }
-formInit(); notesInit(); decisionInit(); renderAccounts(); loadSharedState(); startRealtime();
+formInit(); notesInit(); programmeInit(); activityInit(); decisionInit(); renderAccounts(); loadSharedState(); startRealtime();
 setInterval(() => { if (remoteLoaded && !isSaving) loadSharedState({ quiet: true }); }, 15000);
 window.addEventListener("focus", () => { if (!isSaving) loadSharedState({ quiet: true }); });

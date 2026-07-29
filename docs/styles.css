@@ -474,6 +474,48 @@ a {
 .activity-card a {
   font-weight: bold;
 }
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr) minmax(240px, 1fr);
+  align-items: start;
+  gap: 16px;
+  margin-top: 39px;
+}
+.dashboard-grid .section { margin-top: 0; }
+.dashboard-grid .section-head { min-height: 88px; }
+.dashboard-grid .section-head h1,
+.dashboard-grid .section-head h2 { font-size: 28px; }
+.dashboard-grid .section-head p { font-size: 12px; }
+.dashboard-grid .activity-grid,
+.dashboard-grid .decision-grid { grid-template-columns: 1fr; }
+.dashboard-grid .activity-card summary,
+.dashboard-grid .decision { padding: 14px; }
+.dashboard-grid .activity-card summary b,
+.dashboard-grid .decision b { font-size: 14px; }
+.dashboard-grid .activity-card summary small,
+.dashboard-grid .decision p { font-size: 11px; }
+.budget-personal-inline { margin-top: 18px; }
+.day-modal-button {
+  width: 100%;
+  margin-top: 13px;
+  border: 1px solid #9bdce8;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #f2fdff, #e7f3ff);
+  padding: 10px 12px;
+  color: #006e9b;
+  font: 700 12px/1 "Poppins", sans-serif;
+  cursor: pointer;
+}
+.entry-modal-copy { margin-top: 16px; }
+.entry-modal-copy .detail { display: block; padding: 0; }
+.entry-modal-copy .slots { grid-template-columns: 1fr; }
+.entry-modal-copy .inside { margin-top: 14px; }
+.entry-modal-copy .day-modal-button { display: none; }
+.entry-checks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 12px; }
+.entry-checks label { display: flex; align-items: center; gap: 5px; margin: 0; border: 1px solid #d3e5f4; border-radius: 7px; background: #fff; padding: 7px; color: #274b78; font-size: 11px; }
+.entry-meta { margin-top: 12px; border-radius: 8px; background: #edf9ff; padding: 10px; color: #365b86; font-size: 11px; }
+.history-entry { width: 100%; border: 0; background: transparent; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.history-entry:hover b { color: #0079b7; }
 .personal-budget {
   padding: 18px;
 }
@@ -1151,6 +1193,7 @@ footer {
   .choice-grid,
   .activity-grid,
   .decision-grid,
+  .dashboard-grid,
   .budget-layout,
   .accounts,
   .options {
@@ -1176,6 +1219,11 @@ footer {
   .section {
     margin-top: 39px;
   }
+  .dashboard-grid { gap: 0; margin-top: 39px; }
+  .dashboard-grid .section { margin-top: 39px; }
+  .dashboard-grid .section:first-child { margin-top: 0; }
+  .dashboard-grid .section-head { min-height: 0; }
+  .entry-checks { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 390px) {
   .status,
