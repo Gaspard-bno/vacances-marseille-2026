@@ -147,7 +147,7 @@ const legacy = {
 };
 let expenses = legacy.expenses.map((item) => ({ ...item, participants: item.participants || names }));
 let history = legacy.history, repayments = legacy.repayments, notes = legacy.notes, decisions = [];
-let stateVersion = 1, editing = null, remoteLoaded = false, isSaving = false, realtimeClient = null;
+let stateVersion = 1, editing = null, remoteLoaded = false, isSaving = false, realtimeClient = null, accessPromptResolve = null;
 function hasLegacyData() { return expenses.length || repayments.length || history.length || notes.trim(); }
 function normaliseState(state = {}) {
   return {
@@ -169,15 +169,34 @@ function setSyncStatus(message, tone = "live") {
 }
 function requestHeaders(extra = {}) { return { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, ...extra }; }
 function groupCode() { return localStorage.getItem(GROUP_CODE_KEY) || ""; }
-async function ensureEditAccess() {
-  if (groupCode()) return true;
-  const code = prompt("Code du groupe\n\nIl est demandé une seule fois sur ce téléphone pour protéger les dépenses, remboursements et notes.");
-  if (!code || !code.trim()) return false;
-  localStorage.setItem(GROUP_CODE_KEY, code.trim());
-  setSyncStatus("Code du groupe enregistré sur ce téléphone", "live");
-  return true;
+function closeAccessModal(result = false) {
+  $("group-access-modal")?.remove();
+  const resolve = accessPromptResolve; accessPromptResolve = null;
+  resolve?.(result);
 }
-function unlockGroup() { ensureEditAccess(); }
+function openAccessModal() {
+  if (groupCode()) return Promise.resolve(true);
+  if (accessPromptResolve) return new Promise((resolve) => {
+    const previousResolve = accessPromptResolve;
+    accessPromptResolve = (result) => { previousResolve(result); resolve(result); };
+  });
+  return new Promise((resolve) => {
+    accessPromptResolve = resolve;
+    const modal = document.createElement("div"); modal.id = "group-access-modal"; modal.className = "access-modal-backdrop";
+    modal.innerHTML = `<section class="access-modal" role="dialog" aria-modal="true" aria-labelledby="access-title"><div class="access-lock">✓</div><h2 id="access-title">Accès du groupe</h2><p>Le programme et le budget restent accessibles à tous. Entre le code du groupe pour ajouter ou modifier une dépense, une note ou une décision.</p><form id="group-access-form"><label for="group-code-input">Code du groupe</label><input id="group-code-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{4}" maxlength="4" placeholder="••••" aria-describedby="group-code-help" required /><small id="group-code-help">Il est mémorisé uniquement sur cet appareil. Tu ne le retaperas pas à chaque action.</small><p class="access-error hidden" id="group-code-error">Saisis les 4 chiffres du code du groupe.</p><div class="access-actions"><button class="primary" type="submit">Continuer</button><button class="secondary" type="button" id="cancel-group-access">Annuler</button></div></form></section>`;
+    document.body.append(modal);
+    const input = $("group-code-input"); input.focus();
+    $("cancel-group-access").onclick = () => closeAccessModal(false);
+    modal.addEventListener("click", (event) => { if (event.target === modal) closeAccessModal(false); });
+    $("group-access-form").onsubmit = (event) => {
+      event.preventDefault(); const code = input.value.trim();
+      if (!/^\d{4}$/.test(code)) { $("group-code-error").classList.remove("hidden"); input.focus(); return; }
+      localStorage.setItem(GROUP_CODE_KEY, code); setSyncStatus("Code enregistré · modifications protégées", "live"); closeAccessModal(true);
+    };
+  });
+}
+async function ensureEditAccess() { return groupCode() ? true : openAccessModal(); }
+function unlockGroup() { openAccessModal(); }
 async function loadSharedState({ quiet = false } = {}) {
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/trip_state?id=eq.${TRIP_ID}&select=id,state,version,updated_at,updated_by`, { headers: requestHeaders() });
@@ -196,7 +215,7 @@ async function loadSharedState({ quiet = false } = {}) {
     ({ expenses, repayments, history, notes, decisions } = next);
     renderAccounts();
     renderNotes(); renderDecisions();
-    if (!quiet) setSyncStatus("Carnet partagé à jour · lecture libre", "live");
+    if (!quiet) setSyncStatus("Lecture partagée à jour · code requis pour modifier", "live");
   } catch (error) {
     setSyncStatus(error.message || "Connexion indisponible", "error");
   }

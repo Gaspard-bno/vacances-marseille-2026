@@ -562,6 +562,55 @@ a {
 .decision-modal textarea { min-height: 118px; resize: vertical; }
 .decision-modal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .modal-close { border: 0; border-radius: 50%; background: #eaf6ff; width: 34px; height: 34px; color: var(--ink); font-size: 20px; cursor: pointer; }
+.access-modal-backdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #071331ae;
+  padding: 18px;
+  backdrop-filter: blur(7px);
+}
+.access-modal {
+  width: min(420px, 100%);
+  border: 1px solid #ffffff73;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #ffffff, #edfaff);
+  box-shadow: 0 28px 75px #020b2e8c;
+  padding: 27px;
+  text-align: center;
+}
+.access-lock {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  margin: 0 auto 13px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #00c9dc, #0078d8);
+  box-shadow: 0 9px 19px #0078d845;
+  color: #fff;
+  font-weight: 700;
+}
+.access-modal h2 { margin: 0; color: var(--ink); font: normal 31px/1 "DM Serif Display", Georgia, serif; }
+.access-modal > p { margin: 11px auto 19px; color: var(--muted); font-size: 13px; }
+.access-modal form { text-align: left; }
+.access-modal label { display: block; margin-bottom: 7px; color: var(--ink); font-size: 12px; font-weight: 700; }
+.access-modal input {
+  width: 100%;
+  border: 1px solid #b7d9ed;
+  border-radius: 10px;
+  background: #fff;
+  padding: 13px;
+  color: var(--ink);
+  font: 700 24px/1 "Poppins", sans-serif;
+  letter-spacing: .34em;
+  text-align: center;
+}
+.access-modal small { display: block; margin-top: 8px; color: #5c7496; font-size: 11px; line-height: 1.45; }
+.access-error { margin: 10px 0 0; color: var(--red); font-size: 12px; font-weight: 600; }
+.access-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 18px; }
 .decision:nth-child(3n) {
   border-top-color: var(--coral);
 }
