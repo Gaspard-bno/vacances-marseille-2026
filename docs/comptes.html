@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#0c2a58" />
     <title>Marseille 2026 · Comptes & notes</title>
-    <link rel="stylesheet" href="styles.css?v=5" />
+    <link rel="stylesheet" href="styles.css?v=8" />
   </head>
   <body>
     <header class="top">
@@ -30,6 +30,10 @@
             Un carnet simple : saisir la dépense, cocher les personnes
             concernées, puis marquer les remboursements réellement faits.
           </p>
+          <div class="sync-bar" id="sync-status" aria-live="polite">
+            <span class="sync-dot"></span><span>Connexion du carnet partagé…</span>
+            <button class="secondary" type="button" id="unlock-group">Activer les modifications</button>
+          </div>
         </div>
         <div class="accounts">
           <article class="card tool">
@@ -110,18 +114,14 @@
             </p>
             <div class="settlements" id="settlements"></div>
           </article>
-          <article class="card tool full">
+          <article class="card tool">
             <h3>Historique</h3>
             <p>
               Ajouts, corrections, suppressions et remboursements cochés restent
               tracés.
             </p>
             <ul class="history" id="history"></ul>
-            <p class="local">
-              Les données sont enregistrées sur cet appareil. Pour un carnet
-              identique et en direct sur les 9 téléphones, il faudra ajouter une
-              synchronisation partagée sécurisée.
-            </p>
+            <p class="local">Chaque modification est partagée avec le groupe et reste restaurable ici.</p>
           </article>
         </div>
       </section>
@@ -130,6 +130,7 @@
       <span>Marseille 2026 · Comptes du groupe</span
       ><a href="index.html">← Retour au programme</a>
     </footer>
-    <script src="app.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="app.js?v=7" defer></script>
   </body>
 </html>

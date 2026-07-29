@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#0c2a58" />
     <title>Marseille 2026 · Programme</title>
-    <link rel="stylesheet" href="styles.css?v=5" />
+    <link rel="stylesheet" href="styles.css?v=8" />
   </head>
   <body>
     <header class="top">
@@ -45,6 +45,9 @@
               Cliquer sur une journée pour les détails, les préparatifs et les
               liens utiles.
             </p>
+          </div>
+          <div class="sync-bar compact" id="sync-status" aria-live="polite">
+            <span class="sync-dot"></span><span>Carnet partagé : connexion…</span>
           </div>
         </div>
         <div class="card program">
@@ -391,23 +394,64 @@
               >
             </div>
           </details>
+          <details class="card activity-card">
+            <summary>
+              <span>LUN. 10</span><b>Club Marseille · #1</b
+              ><small>Sortie principale · pré-soirée à la maison</small>
+            </summary>
+            <div>
+              <p><b>À confirmer :</b> club/rooftop, équipe de retour et enveloppe personnelle.</p>
+              <p><b>À préparer :</b> conducteurs sobres ou VTC, pièce d’identité, tenue de sortie et budget club.</p>
+              <a target="_blank" href="https://carte-compass.fr/offres_marseille/r2-le-rooftop/">Voir l’offre Compass R2 ↗</a>
+            </div>
+          </details>
+          <details class="card activity-card">
+            <summary>
+              <span>JEU. 13</span><b>Club Marseille · #2</b
+              ><small>Après karting · retour libre par sous-groupes</small>
+            </summary>
+            <div>
+              <p><b>Priorité :</b> confirmer le lieu la veille, sans obliger les personnes qui préfèrent une soirée calme.</p>
+              <p><b>À préparer :</b> repas simple avant, pré-soirée maison, solution retour et budget individuel.</p>
+              <a href="#decisions">Ouvrir la décision clubs & bars ↓</a>
+            </div>
+          </details>
+          <details class="card activity-card">
+            <summary>
+              <span>SAM. 15</span><b>Casino Cassis</b
+              ><small>Soirée facultative · enveloppe jeu 20–50 €</small>
+            </summary>
+            <div>
+              <p><b>À confirmer :</b> trajet, pièces d’identité, tenue demandée et personnes partantes.</p>
+              <p><b>Règle groupe :</b> enveloppe jeu choisie avant de partir ; aucun dépassement à compenser.</p>
+              <a href="#decisions">Ouvrir la décision casino ↓</a>
+            </div>
+          </details>
+          <details class="card activity-card">
+            <summary>
+              <span>LIBRE</span><b>Plage & baignade</b
+              ><small>2 à 3 journées · Sainte-Croix, La Couronne ou Le Rouet</small>
+            </summary>
+            <div>
+              <p><b>À préparer :</b> eau, glacière, pique-nique, parasol, crème solaire et sac pour les déchets.</p>
+              <p><b>Option sur place :</b> paddle, bouée tractée ou jet-ski uniquement pour les volontaires.</p>
+              <a href="#programme">Voir les journées plage ↓</a>
+            </div>
+          </details>
+          <details class="card activity-card">
+            <summary>
+              <span>OPTION</span><b>Bar chill Aix / Marseille</b
+              ><small>Vendredi ou mardi · selon l’énergie du groupe</small>
+            </summary>
+            <div>
+              <p><b>Sans réservation pour l’instant :</b> choix sur place, après avoir regardé la fatigue et le budget.</p>
+              <p><b>Budget :</b> enveloppe personnelle 10–40 € ; une option calme pour le groupe.</p>
+              <a href="#decisions">Ouvrir la décision clubs & bars ↓</a>
+            </div>
+          </details>
         </div>
       </section>
-      <section class="section status">
-        <div class="status-card good">
-          <span>BATEAU</span><b>130 € / pers.</b>
-          <p>Bleue Évasion · mercredi</p>
-        </div>
-        <div class="status-card">
-          <span>ACTIVITÉS</span><b>3 prévues</b>
-          <p>Bateau, karting, kayak</p>
-        </div>
-        <div class="status-card">
-          <span>SOIRÉES</span><b>2 clubs + casino</b>
-          <p>Lundi, jeudi, samedi</p>
-        </div>
-      </section>
-      <section class="section">
+      <section class="section" id="decisions">
         <div class="section-head">
           <div>
             <h2>Décisions à prendre</h2>
@@ -415,45 +459,45 @@
           </div>
         </div>
         <div class="decision-grid">
-          <article class="card decision done">
+          <article class="card decision done" data-decision="boat" role="button" tabindex="0">
             <b>✓ Bateau du mercredi</b>
             <p>Confirmer horaire, bateau et port de départ exact.</p>
           </article>
-          <article class="card decision">
+          <article class="card decision" data-decision="kayak" role="button" tabindex="0">
             <b>02 · Kayak vendredi</b>
             <p>Choisir Cassis Kayak ou Lo’Kayak, durée et créneau tardif.</p>
           </article>
-          <article class="card decision">
+          <article class="card decision" data-decision="karting" role="button" tabindex="0">
             <b>03 · Karting jeudi</b>
             <p>Rognac ou Trets, une ou deux sessions, cagoules, créneau.</p>
           </article>
-          <article class="card decision">
+          <article class="card decision" data-decision="compass" role="button" tabindex="0">
             <b>04 · Compass pour tous</b>
             <p>
               Chaque personne prend l’abonnement à 2,99 € si les offres retenues
               le justifient.
             </p>
           </article>
-          <article class="card decision">
+          <article class="card decision" data-decision="retours" role="button" tabindex="0">
             <b>05 · Retours de soirée</b>
             <p>
               Conducteurs sobres ou VTC : qui ne boit pas et qui rentre quand ?
             </p>
           </article>
-          <article class="card decision">
+          <article class="card decision" data-decision="restaurant" role="button" tabindex="0">
             <b>06 · Restaurant marquant</b>
             <p>
               Choisir l’adresse et sa fourchette, sans dépasser le scénario
               décidé.
             </p>
           </article>
-          <article class="card decision">
+          <article class="card decision" data-decision="sorties" role="button" tabindex="0">
             <b>07 · Club / bars</b>
             <p>
               Choisir les deux soirées et l’enveloppe individuelle de chacun.
             </p>
           </article>
-          <article class="card decision">
+          <article class="card decision" data-decision="courses" role="button" tabindex="0">
             <b>08 · Courses dimanche</b>
             <p>
               Répartir les équipes et le moyen de paiement du premier gros
@@ -467,9 +511,8 @@
           <div>
             <h2>Notes du groupe</h2>
             <p>
-              Listes rapides, infos logement, idées et rappels. Elles seront
-              partagées avec le carnet dès que la synchronisation commune sera
-              activée.
+              Listes rapides, infos logement, idées et rappels. Elles sont
+              partagées avec le carnet du groupe.
             </p>
           </div>
         </div>
@@ -478,6 +521,7 @@
             id="group-notes"
             placeholder="Ex. Arthur prend les glaçons · réserver le bateau avant…"
           ></textarea>
+          <button class="primary" id="save-group-notes" type="button">Enregistrer les notes du groupe</button>
         </article>
       </section>
     </main>
@@ -485,5 +529,7 @@
       <span>Marseille 2026 · Organisation du groupe</span
       ><a href="budget.html">Voir le budget →</a>
     </footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="app.js?v=7" defer></script>
   </body>
 </html>
