@@ -24,9 +24,9 @@ body {
     15px/1.45 Arial,
     Helvetica,
     sans-serif;
-  background: radial-gradient(circle at 0 0, #e2f5f1 0, transparent 28%),
-    radial-gradient(circle at 100% 10%, #f4d7c1 0, transparent 23%),
-    var(--cream);
+  background: radial-gradient(circle at 0 0, #d9f3ef 0, transparent 30%),
+    radial-gradient(circle at 100% 9%, #f6d0b8 0, transparent 25%),
+    radial-gradient(circle at 82% 70%, #d8f1eb 0, transparent 22%), var(--cream);
 }
 a {
   color: var(--teal);
@@ -39,7 +39,7 @@ a {
 .top {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(115deg, #fffdf9, #f2fbf8 57%, #d9f1ed);
+  background: linear-gradient(115deg, #fffdf9 0%, #f4fbf9 53%, #d3efea 100%);
   border-bottom: 1px solid var(--line);
 }
 .top:after {
@@ -51,7 +51,20 @@ a {
   right: -66px;
   top: -72px;
   border-radius: 50%;
-  background: var(--lagoon);
+  background: linear-gradient(145deg, #53cbd0, #169ca4);
+  box-shadow: -12px 15px 35px #08797b31;
+}
+.top:before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: 270px;
+  height: 54px;
+  bottom: -30px;
+  left: 37%;
+  border-radius: 50%;
+  border-top: 2px solid #73cbc91f;
+  transform: rotate(-6deg);
 }
 .top-row {
   position: relative;
@@ -90,18 +103,81 @@ a {
   padding-top: 6px;
 }
 .top nav a {
-  padding: 8px 0;
-  border-bottom: 2px solid transparent;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 99px;
   color: #226f70;
   font-size: 13px;
   font-weight: bold;
 }
 .top nav a.active,
 .top nav a:hover {
-  border-color: var(--coral);
+  border-color: #e7ad90;
+  background: #fffaf5cc;
+  box-shadow: 0 4px 12px #d2805630;
+}
+.top nav a:before {
+  margin-right: 5px;
+  font-size: 12px;
+}
+.top nav a:nth-child(1):before {
+  content: "☼";
+}
+.top nav a:nth-child(2):before {
+  content: "€";
+}
+.top nav a:nth-child(3):before {
+  content: "✓";
 }
 .main {
   padding: 27px 24px 65px;
+}
+.trip-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 185px;
+  margin: 0;
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, #fffdf9e8 0%, #fffdf9ab 38%, #fffdf900 72%),
+    url("calanques-hero.png") center right / cover no-repeat;
+  box-shadow: 0 18px 36px #0d5f6140;
+}
+.trip-hero:after {
+  content: "";
+  position: absolute;
+  right: -35px;
+  bottom: -72px;
+  width: 210px;
+  height: 150px;
+  border: 2px solid #fff9;
+  border-radius: 50%;
+  transform: rotate(-18deg);
+}
+.trip-hero figcaption {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  max-width: 420px;
+  padding: 35px;
+}
+.trip-hero span {
+  color: var(--teal);
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.14em;
+}
+.trip-hero b {
+  color: var(--ink);
+  font:
+    normal 30px/1 Georgia,
+    serif;
+  letter-spacing: -0.055em;
+}
+.trip-hero small {
+  color: #567776;
+  font-size: 13px;
 }
 .status {
   display: grid;
@@ -114,7 +190,15 @@ a {
   background: #ffffffdb;
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: 0 8px 28px #315d5110;
+  box-shadow: 0 10px 30px #315d5114;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.card:hover,
+.status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px #315d511d;
 }
 .status-card {
   padding: 16px;
@@ -249,11 +333,12 @@ a {
   margin-top: 17px;
   border: 1px solid #b8d8d2;
   border-radius: 6px;
-  background: #fff;
+  background: linear-gradient(135deg, #ffffff, #edf9f7);
   padding: 9px 11px;
   color: var(--teal);
   font-size: 12px;
   font-weight: bold;
+  box-shadow: 0 5px 12px #08797b14;
 }
 .inside {
   margin-top: 16px;
@@ -309,6 +394,17 @@ a {
   padding: 16px;
   cursor: pointer;
   list-style: none;
+}
+.activity-card summary:after {
+  content: "→";
+  float: right;
+  margin-top: -26px;
+  color: var(--coral);
+  font-size: 20px;
+  font-weight: bold;
+}
+.activity-card[open] summary:after {
+  content: "×";
 }
 .activity-card summary::-webkit-details-marker {
   display: none;
@@ -422,8 +518,9 @@ a {
 }
 .budget-switch button.active {
   border-color: var(--teal);
-  background: var(--teal);
+  background: linear-gradient(135deg, #08797b, #24afb2);
   color: #fff;
+  box-shadow: 0 7px 16px #08797b42;
 }
 .budget-layout {
   display: grid;
@@ -590,10 +687,11 @@ a {
 .primary {
   border: 0;
   border-radius: 6px;
-  background: var(--teal);
+  background: linear-gradient(135deg, #08797b, #24afb2);
   padding: 10px 13px;
   color: #fff;
   font-weight: bold;
+  box-shadow: 0 8px 18px #08797b38;
 }
 .secondary {
   border: 1px solid var(--line);
@@ -719,6 +817,34 @@ a {
   border-color: #df9a95;
   background: #fff6f5;
 }
+.person.status-red {
+  border-color: #e09a96;
+  background: linear-gradient(135deg, #fff7f5, #ffe4e0);
+}
+.person.status-yellow {
+  border-color: #e5c477;
+  background: linear-gradient(135deg, #fffdf4, #fff0bf);
+}
+.person.status-orange {
+  border-color: #e7ad84;
+  background: linear-gradient(135deg, #fff9f3, #ffe0c7);
+}
+.person.status-green {
+  border-color: #91cfc1;
+  background: linear-gradient(135deg, #f5fffb, #dff5ed);
+}
+.person.status-red small:last-child {
+  color: #b14540;
+}
+.person.status-yellow small:last-child {
+  color: #9b7114;
+}
+.person.status-orange small:last-child {
+  color: #bc6935;
+}
+.person.status-green small:last-child {
+  color: var(--green);
+}
 .positive {
   color: var(--green) !important;
 }
@@ -754,6 +880,11 @@ a {
   border-left: 3px solid var(--red);
   background: #fff1ef;
   color: #913d39;
+}
+.settlement.warning {
+  border-left: 3px solid #d6a834;
+  background: #fff9df;
+  color: #866615;
 }
 .settlement button {
   border: 0;
@@ -811,6 +942,19 @@ footer {
   }
   .main {
     padding: 21px 16px 52px;
+  }
+  .trip-hero {
+    min-height: 150px;
+    background:
+      linear-gradient(90deg, #fffdf9ef 0%, #fffdf9b5 61%, #fffdf940 100%),
+      url("calanques-hero.png") 65% center / cover no-repeat;
+  }
+  .trip-hero figcaption {
+    padding: 26px 22px;
+    max-width: 285px;
+  }
+  .trip-hero b {
+    font-size: 25px;
   }
   .status {
     grid-template-columns: 1fr 1fr;

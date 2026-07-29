@@ -215,6 +215,16 @@ function suggested(balance) {
   }
   return out;
 }
+function personStatus(name, balance) {
+  const remaining = Math.max(0, -balance);
+  const hasPaidBack = repayments.some((payment) => payment.from === name);
+  if (remaining < 0.005) return { tone: "green", label: "✓ tout est réglé" };
+  if (remaining > 100)
+    return { tone: "red", label: "à rembourser en priorité" };
+  if (remaining > 50) return { tone: "yellow", label: "reste à rembourser" };
+  if (hasPaidBack) return { tone: "orange", label: "remboursement en cours" };
+  return { tone: "red", label: "remboursement à faire" };
+}
 function formInit() {
   if (!$("expense-payer")) return;
   $("expense-payer").innerHTML = names
@@ -284,7 +294,12 @@ function editExpense(id) {
 }
 function deleteExpense(id) {
   const e = expenses.find((e) => e.id === id);
-  if (!confirm(`Supprimer « ${e.label} » ? À utiliser seulement en cas d’erreur : elle restera restaurable dans l’historique.`)) return;
+  if (
+    !confirm(
+      `Supprimer « ${e.label} » ? À utiliser seulement en cas d’erreur : elle restera restaurable dans l’historique.`,
+    )
+  )
+    return;
   expenses = expenses.filter((e) => e.id !== id);
   log("Suppression", `${e.label} · ${euro(e.amount)}`, e);
   renderAccounts();
@@ -296,10 +311,14 @@ function isExpenseResolved(expense) {
   const share = Number(expense.amount) / expense.participants.length;
   return expense.participants
     .filter((name) => name !== expense.payer)
-    .every((name) =>
-      expenseRepayments(expense)
-        .filter((payment) => payment.from === name && payment.to === expense.payer)
-        .reduce((sum, payment) => sum + payment.amount, 0) >= share - 0.005,
+    .every(
+      (name) =>
+        expenseRepayments(expense)
+          .filter(
+            (payment) => payment.from === name && payment.to === expense.payer,
+          )
+          .reduce((sum, payment) => sum + payment.amount, 0) >=
+        share - 0.005,
     );
 }
 function markExpenseRepayment(expenseId, from, to, amount) {
@@ -312,7 +331,10 @@ function markExpenseRepayment(expenseId, from, to, amount) {
     amount,
     at: new Date().toLocaleString("fr-FR"),
   });
-  log("Remboursement coché", `${from} → ${to} · ${euro(amount)} · ${expense.label}`);
+  log(
+    "Remboursement coché",
+    `${from} → ${to} · ${euro(amount)} · ${expense.label}`,
+  );
   showExpense(expenseId);
   renderAccounts();
 }
@@ -322,18 +344,32 @@ function showExpense(id) {
   const detail = $("expense-detail");
   const share = Number(expense.amount) / expense.participants.length;
   detail.classList.remove("hidden");
-  detail.innerHTML = `<b>${esc(expense.label)}</b> · payé par ${expense.payer} · part individuelle ${euro(share)}<br><small>Cocher ici un remboursement vers la personne qui a avancé cette dépense. Une fois toutes les parts réglées, la dépense devient verte.</small><div class="expense-members">${expense.participants.map((name) => {
-    if (name === expense.payer) return `<div><b>${name}</b><span>avance effectuée</span></div>`;
-    const paid = expenseRepayments(expense).filter((payment) => payment.from === name && payment.to === expense.payer).reduce((sum, payment) => sum + payment.amount, 0);
-    const remaining = Math.max(0, share - paid);
-    return `<div class="${remaining < 0.005 ? "done" : ""}"><b>${name}</b><span>${remaining < 0.005 ? "✓ part réglée" : `reste ${euro(remaining)}`}</span>${remaining < 0.005 ? "" : `<button onclick="markExpenseRepayment('${expense.id}','${name}','${expense.payer}',${remaining})">marquer réglé</button>`}</div>`;
-  }).join("")}</div>`;
+  detail.innerHTML = `<b>${esc(expense.label)}</b> · payé par ${expense.payer} · part individuelle ${euro(share)}<br><small>Cocher ici un remboursement vers la personne qui a avancé cette dépense. Une fois toutes les parts réglées, la dépense devient verte.</small><div class="expense-members">${expense.participants
+    .map((name) => {
+      if (name === expense.payer)
+        return `<div><b>${name}</b><span>avance effectuée</span></div>`;
+      const paid = expenseRepayments(expense)
+        .filter(
+          (payment) => payment.from === name && payment.to === expense.payer,
+        )
+        .reduce((sum, payment) => sum + payment.amount, 0);
+      const remaining = Math.max(0, share - paid);
+      return `<div class="${remaining < 0.005 ? "done" : ""}"><b>${name}</b><span>${remaining < 0.005 ? "✓ part réglée" : `reste ${euro(remaining)}`}</span>${remaining < 0.005 ? "" : `<button onclick="markExpenseRepayment('${expense.id}','${name}','${expense.payer}',${remaining})">marquer réglé</button>`}</div>`;
+    })
+    .join("")}</div>`;
 }
 function restoreExpense(historyId) {
   const entry = history.find((item) => item.id === historyId);
-  if (!entry?.snapshot || expenses.some((expense) => expense.id === entry.snapshot.id)) return;
+  if (
+    !entry?.snapshot ||
+    expenses.some((expense) => expense.id === entry.snapshot.id)
+  )
+    return;
   expenses.unshift(entry.snapshot);
-  log("Restauration", `${entry.snapshot.label} · ${euro(entry.snapshot.amount)}`);
+  log(
+    "Restauration",
+    `${entry.snapshot.label} · ${euro(entry.snapshot.amount)}`,
+  );
   renderAccounts();
 }
 function markRepayment(from, to, amount) {
@@ -374,19 +410,18 @@ function renderAccounts() {
   );
   $("expense-list").innerHTML = expenses.length
     ? expenses
-        .map(
-          (e) => {
-            const resolved = isExpenseResolved(e);
-            return `<li class="${resolved ? "resolved" : ""}"><span><b>${esc(e.label)}</b><small>${esc(e.category)} · payé par ${e.payer} · ${e.participants.length} personne(s) · ${e.at || ""}</small></span><span><b>${resolved ? "✓ réglée" : euro(e.amount)}</b><button class="text-action" onclick="showExpense('${e.id}')">détail</button><button class="text-action" onclick="editExpense('${e.id}')">modifier</button><button class="text-action delete" onclick="deleteExpense('${e.id}')">supprimer</button></span></li>`;
-          },
-        )
+        .map((e) => {
+          const resolved = isExpenseResolved(e);
+          return `<li class="${resolved ? "resolved" : ""}"><span><b>${esc(e.label)}</b><small>${esc(e.category)} · payé par ${e.payer} · ${e.participants.length} personne(s) · ${e.at || ""}</small></span><span><b>${resolved ? "✓ réglée" : euro(e.amount)}</b><button class="text-action" onclick="showExpense('${e.id}')">détail</button><button class="text-action" onclick="editExpense('${e.id}')">modifier</button><button class="text-action delete" onclick="deleteExpense('${e.id}')">supprimer</button></span></li>`;
+        })
         .join("")
     : "<li>Aucune dépense saisie.</li>";
   $("balance-list").innerHTML = names
     .map((n) => {
       const b = balance[n],
-        c = b > 0.005 ? "positive" : b < -0.005 ? "negative" : "";
-      return `<button class="person ${b < -50 ? "urgent" : ""}" onclick="showPerson('${n}')"><b>${n}</b><small>avancé ${euro(paid[n])} · part ${euro(owed[n])}</small><small class="${c}">${b < -50 ? "⚠ priorité · " : ""}${b > 0.005 ? "doit recevoir " : b < -0.005 ? "doit rembourser " : "à l’équilibre "}${euro(Math.abs(b))}</small></button>`;
+        c = b > 0.005 ? "positive" : b < -0.005 ? "negative" : "",
+        status = personStatus(n, b);
+      return `<button class="person status-${status.tone}" onclick="showPerson('${n}')"><b>${n}</b><small>avancé ${euro(paid[n])} · part ${euro(owed[n])}</small><small class="${c}">${b > 0.005 ? "doit recevoir " : b < -0.005 ? "doit rembourser " : "à l’équilibre "}${euro(Math.abs(b))} · ${status.label}</small></button>`;
     })
     .join("");
   $("settlements").innerHTML =
@@ -394,7 +429,7 @@ function renderAccounts() {
       ? moves
           .map(
             (m) =>
-              `<div class="settlement ${m.a > 50 ? "urgent" : ""}"><span><b>${m.from}</b> rembourse <b>${m.to}</b> · ${euro(m.a)}${m.a > 50 ? " · priorité" : ""}</span><button onclick="markRepayment('${m.from}','${m.to}',${m.a})">✓ fait</button></div>`,
+              `<div class="settlement ${m.a > 100 ? "urgent" : m.a > 50 ? "warning" : ""}"><span><b>${m.from}</b> rembourse <b>${m.to}</b> · ${euro(m.a)}${m.a > 100 ? " · priorité" : m.a > 50 ? " · important" : ""}</span><button onclick="markRepayment('${m.from}','${m.to}',${m.a})">✓ fait</button></div>`,
           )
           .join("")
       : '<div class="settlement done">Tout le monde est à l’équilibre.</div>') +
