@@ -48,7 +48,7 @@ a {
   position: relative;
   overflow: hidden;
   background: linear-gradient(116deg, #11225a 0%, #22509f 54%, #00aeba 100%);
-  border-bottom: 0;
+  border-bottom: 3px solid #ffffffd9;
 }
 .top:after {
   content: "";
