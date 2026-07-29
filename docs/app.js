@@ -153,35 +153,70 @@ function initPersonalBudget() {
     const rate = Math.max(0, Number(margin.value) || 0);
     const subtotal = itemValues.reduce((sum, value) => sum + value, 0);
     const total = Math.round(subtotal * (1 + rate / 100));
+    const imageButton = document.getElementById("personal-image");
+    if (imageButton) imageButton.disabled = true;
+    if (status) status.textContent = "Création de ta carte budget…";
+    try { await document.fonts?.ready; } catch { /* La carte garde une police système si nécessaire. */ }
     const canvas = document.createElement("canvas"); canvas.width = 1080; canvas.height = 1350;
-    const ctx = canvas.getContext("2d"); if (!ctx) return;
-    const gradient = ctx.createLinearGradient(0, 0, 1080, 1350); gradient.addColorStop(0, "#092a61"); gradient.addColorStop(.53, "#007ccc"); gradient.addColorStop(1, "#ff625f");
-    ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.arc(900, 180, 250, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(160, 1220, 220, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#fff"; ctx.font = "700 42px Poppins, Arial"; ctx.fillText("MARSEILLE 2026", 80, 120);
-    ctx.font = "500 29px Poppins, Arial"; ctx.fillText("9 → 16 août · 9 amis", 80, 170);
-    ctx.fillStyle = "#fff"; ctx.font = "700 76px Poppins, Arial"; ctx.fillText(name.value.trim() || "Mon budget", 80, 310);
-    ctx.fillStyle = "#e6fbff"; ctx.font = "500 31px Poppins, Arial"; ctx.fillText("version personnelle · marge " + rate + " % incluse", 80, 364);
-    ctx.fillStyle = "#ffffff"; ctx.roundRect(62, 440, 956, 330, 34); ctx.fill();
-    ctx.fillStyle = "#092a61"; ctx.font = "700 30px Poppins, Arial"; ctx.fillText("BUDGET PRÉVISIONNEL", 112, 518);
-    ctx.font = "700 112px Poppins, Arial"; ctx.fillText(euro(total), 105, 655);
-    ctx.fillStyle = "#496487"; ctx.font = "500 28px Poppins, Arial"; ctx.fillText("Sous-total : " + euro(subtotal), 112, 719);
+    const ctx = canvas.getContext("2d"); if (!ctx) { if (imageButton) imageButton.disabled = false; return; }
+    const rounded = (x, y, width, height, radius) => {
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x, y, width, height, radius);
+      else { const r = Math.min(radius, width / 2, height / 2); ctx.moveTo(x + r, y); ctx.arcTo(x + width, y, x + width, y + height, r); ctx.arcTo(x + width, y + height, x, y + height, r); ctx.arcTo(x, y + height, x, y, r); ctx.arcTo(x, y, x + width, y, r); }
+      ctx.closePath();
+    };
+    const fillRounded = (x, y, width, height, radius, color) => { ctx.fillStyle = color; rounded(x, y, width, height, radius); ctx.fill(); };
+    const font = (weight, size, family = "Poppins, Arial, sans-serif") => { ctx.font = `${weight} ${size}px ${family}`; };
+    const dark = "#10265a", ink = "#17376f", muted = "#5c7396", pale = "#f5fbff";
+    const background = ctx.createLinearGradient(0, 0, 1080, 1350);
+    background.addColorStop(0, "#10275f"); background.addColorStop(.52, "#006dbe"); background.addColorStop(1, "#00b3c0");
+    ctx.fillStyle = background; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffce58"; ctx.beginPath(); ctx.arc(933, 123, 132, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ff735d"; ctx.beginPath(); ctx.arc(1000, 1260, 220, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.23)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 250); ctx.bezierCurveTo(250, 170, 520, 330, 1080, 200); ctx.stroke();
+    ctx.fillStyle = "#fff"; font("700", 38); ctx.fillText("MARSEILLE 2026", 68, 88);
+    ctx.fillStyle = "#dffbff"; font("500", 23); ctx.fillText("9 → 16 AOÛT · 9 AMIS", 68, 126);
+    fillRounded(760, 56, 250, 54, 27, "#ff735d"); ctx.fillStyle = "#fff"; font("700", 18); ctx.textAlign = "center"; ctx.fillText("BUDGET PERSONNEL", 885, 90); ctx.textAlign = "left";
+    ctx.fillStyle = "#fff"; font("400", 66, "'DM Serif Display', Georgia, serif"); ctx.fillText(name.value.trim() || "Mon budget", 66, 226);
+    ctx.fillStyle = "#dcfaff"; font("500", 24); ctx.fillText("Ta version privée, prête à partager ou enregistrer.", 68, 267);
+    fillRounded(48, 314, 984, 348, 34, "#ffffff");
+    ctx.fillStyle = ink; font("700", 20); ctx.letterSpacing = "2px"; ctx.fillText("TOTAL À PRÉVOIR", 94, 374); ctx.letterSpacing = "0px";
+    const totalGradient = ctx.createLinearGradient(90, 412, 800, 560); totalGradient.addColorStop(0, "#007bd1"); totalGradient.addColorStop(1, "#00adbd"); ctx.fillStyle = totalGradient; font("700", 98); ctx.fillText(euro(total), 90, 512);
+    ctx.fillStyle = muted; font("500", 23); ctx.fillText(`Sous-total ${euro(subtotal)} · marge imprévus ${rate} % incluse`, 94, 558);
+    fillRounded(92, 590, 894, 42, 21, "#e8f9ff"); ctx.fillStyle = "#147299"; font("600", 18); ctx.textAlign = "center"; ctx.fillText("Tes postes sont modifiables à tout moment sur le site.", 539, 617); ctx.textAlign = "left";
+    fillRounded(48, 698, 984, 492, 34, pale);
+    ctx.fillStyle = dark; font("700", 28); ctx.fillText("RÉPARTITION DE TON BUDGET", 94, 758);
+    ctx.fillStyle = muted; font("500", 19); ctx.fillText("Les grands repères pour décider sans se prendre la tête.", 94, 790);
     const highlights = [
-      ["Logement", itemValues[0]], ["Bateau", itemValues[1]], ["Kayak + karting", itemValues[2] + itemValues[3]], ["Vie sur place", itemValues[4] + itemValues[5] + itemValues[6]], ["Sorties", itemValues[7] + itemValues[8] + itemValues[9]],
+      ["Logement", itemValues[0], "#ff735d"],
+      ["Activités réservées", itemValues[1] + itemValues[2] + itemValues[3], "#00abc1"],
+      ["Vie sur place", itemValues[4] + itemValues[5] + itemValues[6], "#ffbb3d"],
+      ["Sorties & casino", itemValues[7] + itemValues[8] + itemValues[9], "#3b72dc"],
+      ["Trajets & Compass", itemValues[10] + itemValues[11], "#7c8eae"],
     ];
-    ctx.fillStyle = "#ffffff"; ctx.roundRect(62, 830, 956, 365, 34); ctx.fill();
-    ctx.fillStyle = "#092a61"; ctx.font = "700 30px Poppins, Arial"; ctx.fillText("MES REPÈRES", 112, 905);
-    highlights.forEach(([label, amount], index) => { const y = 970 + index * 48; ctx.fillStyle = "#425f86"; ctx.font = "500 27px Poppins, Arial"; ctx.fillText(label, 112, y); ctx.fillStyle = "#092a61"; ctx.font = "700 27px Poppins, Arial"; ctx.textAlign = "right"; ctx.fillText(euro(amount), 965, y); ctx.textAlign = "left"; });
-    ctx.fillStyle = "#fff"; ctx.font = "500 24px Poppins, Arial"; ctx.fillText("Budget privé · l’organisation du groupe", 80, 1280); ctx.fillText("reste dans Marseille 2026.", 80, 1318);
+    const maxHighlight = Math.max(...highlights.map(([, amount]) => amount), 1);
+    highlights.forEach(([label, amount, color], index) => {
+      const y = 846 + index * 66;
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(104, y - 8, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = ink; font("600", 21); ctx.fillText(label, 126, y);
+      ctx.fillStyle = dark; font("700", 21); ctx.textAlign = "right"; ctx.fillText(euro(amount), 950, y); ctx.textAlign = "left";
+      fillRounded(126, y + 12, 680, 9, 4.5, "#dceaf4");
+      fillRounded(126, y + 12, Math.max(14, 680 * amount / maxHighlight), 9, 4.5, color);
+    });
+    fillRounded(48, 1226, 984, 68, 24, "rgba(255,255,255,.18)");
+    ctx.fillStyle = "#fff"; font("600", 20); ctx.fillText("À garder en tête : jet-ski, bouée, VTC et extras restent hors budget.", 82, 1268);
+    ctx.fillStyle = "#dffbff"; font("500", 17); ctx.fillText("Carte créée depuis Marseille 2026 · budget privé", 82, 1318);
     canvas.toBlob(async (blob) => {
       if (!blob) return;
-      const file = new File([blob], "budget-marseille-2026.png", { type: "image/png" });
+      const safeName = (name.value.trim() || "mon-budget").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const file = new File([blob], `budget-${safeName}-marseille-2026.png`, { type: "image/png" });
       try {
         if (navigator.canShare?.({ files: [file] })) { await navigator.share({ title: "Mon budget Marseille 2026", files: [file] }); if (status) status.textContent = "Image prête : dans le partage iPhone, choisis « Enregistrer l’image » pour la pellicule."; return; }
       } catch (error) { if (error?.name === "AbortError") return; }
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = file.name; link.click(); URL.revokeObjectURL(link.href);
       if (status) status.textContent = "Image téléchargée. Sur iPhone, utilise le menu Partager puis « Enregistrer l’image ».";
     }, "image/png");
+    if (imageButton) imageButton.disabled = false;
   });
   update();
 }
