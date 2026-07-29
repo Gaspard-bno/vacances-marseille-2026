@@ -72,9 +72,15 @@ function renderBudget(key = "realiste") {
 }
 document
   .querySelectorAll("[data-budget]")
-  .forEach((b) =>
-    b.addEventListener("click", () => renderBudget(b.dataset.budget)),
-  );
+  .forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.budget === "perso") {
+      document.getElementById("perso")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("personal-name")?.focus({ preventScroll: true });
+      document.querySelectorAll("[data-budget]").forEach((button) => button.classList.toggle("active", button === b));
+      return;
+    }
+    renderBudget(b.dataset.budget);
+  }));
 renderBudget();
 const personalDefaultItems = [
   ["Logement", 377],
@@ -102,32 +108,78 @@ function initPersonalBudget() {
         `<label class="personal-row"><span>${label}</span><input data-personal-item="${index}" type="number" min="0" step="1" value="${saved[index] ?? value}" aria-label="${label}" /></label>`,
     )
     .join("");
+  const name = document.getElementById("personal-name");
   const margin = document.getElementById("personal-margin");
+  const status = document.getElementById("personal-status");
+  name.value = saved.name || "";
   margin.value = saved.margin ?? 10;
-  const update = () => {
-    const values = [...document.querySelectorAll("[data-personal-item]")].map(
-      (input) => Math.max(0, Number(input.value) || 0),
+  const values = () => [...document.querySelectorAll("[data-personal-item]")].map(
+    (input) => Math.max(0, Number(input.value) || 0),
+  );
+  const save = (message = "Version personnelle enregistrée sur cet appareil.") => {
+    localStorage.setItem(
+      "marseille26-personal-budget-v1",
+      JSON.stringify({ ...values(), margin: Math.max(0, Number(margin.value) || 0), name: name.value.trim() }),
     );
+    if (status) status.textContent = message;
+  };
+  const update = () => {
+    const itemValues = values();
     const rate = Math.max(0, Number(margin.value) || 0);
-    const subtotal = values.reduce((sum, value) => sum + value, 0);
+    const subtotal = itemValues.reduce((sum, value) => sum + value, 0);
     document.getElementById("personal-total").textContent = euro(
       Math.round(subtotal * (1 + rate / 100)),
     );
-    localStorage.setItem(
-      "marseille26-personal-budget-v1",
-      JSON.stringify({ ...values, margin: rate }),
-    );
+    save();
   };
   rows.addEventListener("input", update);
   margin.addEventListener("input", update);
+  name.addEventListener("input", () => save());
+  document.getElementById("personal-save")?.addEventListener("click", () => save("Version personnelle enregistrée sur cet appareil."));
   document.getElementById("personal-reset").onclick = () => {
     localStorage.removeItem("marseille26-personal-budget-v1");
     [...document.querySelectorAll("[data-personal-item]")].forEach(
       (input, index) => (input.value = personalDefaultItems[index][1]),
     );
+    name.value = "";
     margin.value = 10;
     update();
   };
+  document.getElementById("personal-image")?.addEventListener("click", async () => {
+    const itemValues = values();
+    const rate = Math.max(0, Number(margin.value) || 0);
+    const subtotal = itemValues.reduce((sum, value) => sum + value, 0);
+    const total = Math.round(subtotal * (1 + rate / 100));
+    const canvas = document.createElement("canvas"); canvas.width = 1080; canvas.height = 1350;
+    const ctx = canvas.getContext("2d"); if (!ctx) return;
+    const gradient = ctx.createLinearGradient(0, 0, 1080, 1350); gradient.addColorStop(0, "#092a61"); gradient.addColorStop(.53, "#007ccc"); gradient.addColorStop(1, "#ff625f");
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(255,255,255,.14)"; ctx.beginPath(); ctx.arc(900, 180, 250, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(160, 1220, 220, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = "700 42px Poppins, Arial"; ctx.fillText("MARSEILLE 2026", 80, 120);
+    ctx.font = "500 29px Poppins, Arial"; ctx.fillText("9 → 16 août · 9 amis", 80, 170);
+    ctx.fillStyle = "#fff"; ctx.font = "700 76px Poppins, Arial"; ctx.fillText(name.value.trim() || "Mon budget", 80, 310);
+    ctx.fillStyle = "#e6fbff"; ctx.font = "500 31px Poppins, Arial"; ctx.fillText("version personnelle · marge " + rate + " % incluse", 80, 364);
+    ctx.fillStyle = "#ffffff"; ctx.roundRect(62, 440, 956, 330, 34); ctx.fill();
+    ctx.fillStyle = "#092a61"; ctx.font = "700 30px Poppins, Arial"; ctx.fillText("BUDGET PRÉVISIONNEL", 112, 518);
+    ctx.font = "700 112px Poppins, Arial"; ctx.fillText(euro(total), 105, 655);
+    ctx.fillStyle = "#496487"; ctx.font = "500 28px Poppins, Arial"; ctx.fillText("Sous-total : " + euro(subtotal), 112, 719);
+    const highlights = [
+      ["Logement", itemValues[0]], ["Bateau", itemValues[1]], ["Kayak + karting", itemValues[2] + itemValues[3]], ["Vie sur place", itemValues[4] + itemValues[5] + itemValues[6]], ["Sorties", itemValues[7] + itemValues[8] + itemValues[9]],
+    ];
+    ctx.fillStyle = "#ffffff"; ctx.roundRect(62, 830, 956, 365, 34); ctx.fill();
+    ctx.fillStyle = "#092a61"; ctx.font = "700 30px Poppins, Arial"; ctx.fillText("MES REPÈRES", 112, 905);
+    highlights.forEach(([label, amount], index) => { const y = 970 + index * 48; ctx.fillStyle = "#425f86"; ctx.font = "500 27px Poppins, Arial"; ctx.fillText(label, 112, y); ctx.fillStyle = "#092a61"; ctx.font = "700 27px Poppins, Arial"; ctx.textAlign = "right"; ctx.fillText(euro(amount), 965, y); ctx.textAlign = "left"; });
+    ctx.fillStyle = "#fff"; ctx.font = "500 24px Poppins, Arial"; ctx.fillText("Budget privé · l’organisation du groupe", 80, 1280); ctx.fillText("reste dans Marseille 2026.", 80, 1318);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], "budget-marseille-2026.png", { type: "image/png" });
+      try {
+        if (navigator.canShare?.({ files: [file] })) { await navigator.share({ title: "Mon budget Marseille 2026", files: [file] }); if (status) status.textContent = "Image prête : dans le partage iPhone, choisis « Enregistrer l’image » pour la pellicule."; return; }
+      } catch (error) { if (error?.name === "AbortError") return; }
+      const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = file.name; link.click(); URL.revokeObjectURL(link.href);
+      if (status) status.textContent = "Image téléchargée. Sur iPhone, utilise le menu Partager puis « Enregistrer l’image ».";
+    }, "image/png");
+  });
   update();
 }
 initPersonalBudget();
@@ -135,7 +187,9 @@ const names = ["Arthur", "Aymeric", "Elouan", "Gaetan", "Gaspard", "Hélio", "Ju
 const SUPABASE_URL = "https://pitmfpsfaekexqqdhizm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_1Lh7Q6BiFuR6Hy-3rumzVw_8yW_XN0k";
 const TRIP_ID = "marseille-2026";
-const GROUP_CODE_KEY = "marseille26-group-code-v1";
+// v2 intentionally makes every device request the new 4-digit group code (2006).
+// Shared data remains in Supabase; only this editing permission is device-local.
+const GROUP_CODE_KEY = "marseille26-group-code-v2";
 const MIGRATION_KEY = "marseille26-shared-migrated-v1";
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[c]);
