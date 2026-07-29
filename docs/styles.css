@@ -29,9 +29,12 @@ body {
     Arial,
     sans-serif;
   background:
-    radial-gradient(circle at 10% 4%, #1b5c9d 0, #16326d 25%, transparent 45%),
-    linear-gradient(180deg, #13285a 0, #dff5ff 310px, #f5f9ff 100%);
+    radial-gradient(circle at 7% 15%, #00d3e8b8 0, transparent 27%),
+    radial-gradient(circle at 96% 19%, #ff684ec7 0, transparent 25%),
+    radial-gradient(circle at 68% 89%, #ffc949a8 0, transparent 26%),
+    linear-gradient(142deg, #10245b 0%, #22509f 38%, #00aeba 69%, #ff754b 128%);
   background-attachment: fixed;
+  min-height: 100vh;
 }
 a {
   color: var(--teal);
@@ -1006,10 +1009,11 @@ a {
   box-shadow: 0 14px 32px #0d34702b;
 }
 .section-head h1,
-.section-head h2 { color: #13285a; }
+.section-head h2 { color: #ffffff; text-shadow: 0 2px 16px #08235b52; }
 .section-head p,
 .tool > p,
 .note-card > p { color: #50658a; }
+.section-head p { color: #e5f9ff; text-shadow: 0 1px 10px #08235b44; }
 .budget-switch button,
 .secondary {
   border-color: #bdd8ed;
@@ -1040,7 +1044,8 @@ a {
 .person-detail { border-color: #cfe2f4; background: #f4faff; }
 .settlement { background: linear-gradient(135deg, #fff5df, #fff9ec); }
 .settlement.done { background: linear-gradient(135deg, #edfff7, #dff9ee); }
-footer { border-top-color: #c9def3; color: #52698e; }
+footer { border-top-color: #ffffff4d; color: #e5f9ff; }
+footer a { color: #ffffff; }
 
 footer {
   display: flex;
